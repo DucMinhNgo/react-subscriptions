@@ -1,25 +1,55 @@
-import logo from './logo.svg';
+import { gql, useQuery, useSubscription } from '@apollo/client';
 import './App.css';
 
-function App() {
+const GET_LOCATIONS = gql`
+  query getWishes {
+    getWishes {
+      ambition
+      isFulfilled
+    }
+  }
+`;
+
+// https://www.apollographql.com/docs/react/data/subscriptions
+const COMMENTS_SUBSCRIPTION = gql`
+  subscription wishAdded {
+    wishAdded {
+      newWish {
+        ambition
+        isFulfilled
+      }
+      dateAdded
+    }
+  }
+`;
+
+const ListeningComponent = () => {
+  const { data, loading } = useSubscription(COMMENTS_SUBSCRIPTION);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    <>
+      <b>New Message: {data?.wishAdded?.newWish?.ambition} - {data?.wishAdded?.dateAdded}</b>
+    </>
+  )
+}
+
+function App() {
+  const { loading, error, data } = useQuery(GET_LOCATIONS);
+
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error : {error.message}</p>;
+
+
+  return <>
+    <ListeningComponent />
+    {
+      data.getWishes.map((item, key) => {
+        return (
+          <p key={key}>{item.ambition}: {item.isFulfilled ? 'True' : 'False'}</p>
+        )
+      })}
+  </>
 }
 
 export default App;
